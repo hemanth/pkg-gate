@@ -2,6 +2,7 @@ import { TypeSafeClient } from '@typesafe-ai/sdk';
 import { createLifecycleQuestions, THRESHOLDS } from './questions.js';
 import { simulateLifecycleEvaluation } from './simulator.js';
 import { extractLifecycleScripts, formatReport } from './utils.js';
+import { renderTUI } from './tui.js';
 
 /**
  * Evaluates a package manifest or lifecycle script against TypeSafe System One.
@@ -16,6 +17,7 @@ import { extractLifecycleScripts, formatReport } from './utils.js';
  * @returns {Promise<GuardReport>}
  */
 export async function evaluatePackage(manifest, options = {}) {
+  const startTime = performance.now();
   const scripts = extractLifecycleScripts(manifest.scripts);
 
   // Fast path: No lifecycle scripts at all
@@ -28,6 +30,7 @@ export async function evaluatePackage(manifest, options = {}) {
       confidence: 1.0,
       findings: [],
       reasons: ['No lifecycle scripts found; package cannot execute arbitrary code on install'],
+      latencyMs: Math.round(performance.now() - startTime),
     });
     return report;
   }
@@ -46,7 +49,7 @@ export async function evaluatePackage(manifest, options = {}) {
   const blockScore = options.blockScore ?? THRESHOLDS.BLOCK_SCORE;
   const warnScore = options.warnScore ?? THRESHOLDS.WARN_SCORE;
 
-  // Evaluate each lifecycle script in parallel
+  // Evaluate each lifecycle script in parallel (speculative fan-out)
   const evaluations = await Promise.all(
     scripts.map(async ({ hook, command }) => {
       const state = {
@@ -157,6 +160,8 @@ export async function evaluatePackage(manifest, options = {}) {
     reasons.push('Lifecycle scripts verified benign (standard build or verified binary)');
   }
 
+  const latencyMs = Math.round(performance.now() - startTime);
+
   return createReport({
     name: manifest.name,
     version: manifest.version,
@@ -165,6 +170,7 @@ export async function evaluatePackage(manifest, options = {}) {
     confidence: minConfidence,
     findings,
     reasons,
+    latencyMs,
   });
 }
 
@@ -174,8 +180,11 @@ function createReport(data) {
     isSafe() {
       return this.action === 'allow';
     },
-    inspect() {
-      return formatReport(this);
+    inspect(options = {}) {
+      if (options.plain) {
+        return formatReport(this);
+      }
+      return renderTUI(this);
     },
     assertSafe() {
       if (this.action === 'block') {
@@ -185,6 +194,61 @@ function createReport(data) {
     },
     get summary() {
       return `${this.action.toUpperCase()}: ${this.name}@${this.version} (score: ${this.score.toFixed(2)}, conf: ${(this.confidence * 100).toFixed(0)}%)`;
+    },
+    get structured() {
+      return {
+        schemaVersion: '1.0.0',
+        package: {
+          name: this.name,
+          version: this.version,
+        },
+        verdict: {
+          action: this.action,
+          score: Number(this.score.toFixed(2)),
+          confidence: Number(this.confidence.toFixed(2)),
+          isSafe: this.isSafe(),
+        },
+        scripts: this.findings.map((f) => ({
+          hook: f.hook,
+          command: f.command,
+          model: f.model,
+          intent: f.answers.script_intent
+            ? {
+                choice: f.answers.script_intent.choice,
+                confidence: Number(f.answers.script_intent.confidence.toFixed(2)),
+                probabilities: f.answers.script_intent.probabilities,
+              }
+            : null,
+          severity: f.answers.threat_severity
+            ? {
+                score: Number(f.answers.threat_severity.score.toFixed(2)),
+                confidence: Number(f.answers.threat_severity.confidence.toFixed(2)),
+                rubricLevel: f.answers.threat_severity.legend?.[Math.round(f.answers.threat_severity.score)] || null,
+                probabilities: f.answers.threat_severity.probabilities,
+              }
+            : null,
+          accessesSecrets: f.answers.accesses_secrets
+            ? {
+                probability: Number(f.answers.accesses_secrets.noul.toFixed(2)),
+              }
+            : null,
+          remoteExecution: f.answers.remote_execution
+            ? {
+                probability: Number(f.answers.remote_execution.noul.toFixed(2)),
+              }
+            : null,
+        })),
+        policy: {
+          thresholds: THRESHOLDS,
+          reasons: this.reasons,
+        },
+        telemetry: {
+          latencyMs: this.latencyMs,
+        },
+      };
+    },
+    toJSON() {
+      return this.structured;
     },
   };
 

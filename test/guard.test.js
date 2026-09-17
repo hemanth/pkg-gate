@@ -116,4 +116,29 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
     assert.equal(questions.accesses_secrets.type, 'noul');
     assert.equal(questions.remote_execution.type, 'noul');
   });
+
+  test('report.structured returns strictly typed schema and toJSON() serialization', async () => {
+    const report = await pkgGuard(join(fixturesDir, 'credential-theft.json'), { mock: true });
+    const structured = report.structured;
+
+    assert.equal(structured.schemaVersion, '1.0.0');
+    assert.equal(structured.package.name, 'flatmap-evil');
+    assert.equal(structured.verdict.action, 'block');
+    assert.equal(typeof structured.verdict.score, 'number');
+    assert.equal(typeof structured.verdict.confidence, 'number');
+    assert.equal(structured.verdict.isSafe, false);
+
+    assert.ok(Array.isArray(structured.scripts));
+    const firstScript = structured.scripts[0];
+    assert.equal(firstScript.hook, 'postinstall');
+    assert.equal(firstScript.intent.choice, 'credential_access');
+    assert.equal(typeof firstScript.accessesSecrets.probability, 'number');
+    assert.equal(typeof firstScript.remoteExecution.probability, 'number');
+
+    assert.ok(Array.isArray(structured.policy.reasons));
+    assert.equal(typeof structured.telemetry.latencyMs, 'number');
+
+    const json = JSON.stringify(report);
+    assert.ok(json.includes('"schemaVersion":"1.0.0"'));
+  });
 });
