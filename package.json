@@ -4,12 +4,22 @@
   "description": "Pre-install security gate for npm lifecycle scripts using TypeSafe System One.",
   "type": "module",
   "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
   "bin": {
     "pkg-guard": "./bin/cli.js"
   },
-  "exports": {
-    ".": "./src/index.js"
-  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "node --test test/*.test.js",
     "demo": "node bin/cli.js test/fixtures/credential-theft.json --mock"

@@ -184,7 +184,7 @@ function createReport(data) {
       if (options.plain) {
         return formatReport(this);
       }
-      return renderTUI(this);
+      return renderTUI(this, options);
     },
     assertSafe() {
       if (this.action === 'block') {

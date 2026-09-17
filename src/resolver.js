@@ -45,16 +45,40 @@ export async function resolveManifest(input) {
 
 async function loadLocalManifest(filePath) {
   let target = resolve(process.cwd(), filePath);
-  const stats = await stat(target);
+  let stats;
+  try {
+    stats = await stat(target);
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      throw new Error(`File or directory not found: "${filePath}". Please pass a valid package.json path or npm package name.`);
+    }
+    throw err;
+  }
 
   if (stats.isDirectory()) {
     target = join(target, 'package.json');
+    try {
+      await stat(target);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        throw new Error(`Directory "${filePath}" does not contain a package.json file.`);
+      }
+      throw err;
+    }
   }
 
-  const content = await readFile(target, 'utf8');
-  const json = JSON.parse(content);
-  return normalizeManifest(json);
+  try {
+    const content = await readFile(target, 'utf8');
+    const json = JSON.parse(content);
+    return normalizeManifest(json);
+  } catch (err) {
+    if (err instanceof SyntaxError) {
+      throw new Error(`Invalid JSON syntax in "${target}": ${err.message}`);
+    }
+    throw err;
+  }
 }
+
 
 async function fetchRegistryManifest(packageName) {
   // Support scoped packages like @foo/bar or specific versions like foo@1.2.3

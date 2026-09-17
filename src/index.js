@@ -11,8 +11,22 @@ import { evaluatePackage } from './guard.js';
  * @param {boolean} [options.script] - Treat string input as a raw script command
  * @returns {Promise<import('./guard.js').GuardReport>}
  */
+function looksLikeShellCommand(input) {
+  if (typeof input !== 'string') return false;
+  const trimmed = input.trim();
+  if (trimmed.startsWith('.') || trimmed.startsWith('/') || trimmed.endsWith('.json')) {
+    return false;
+  }
+  return (
+    /(\||\&\&|;|\|\||`|\$\(|\b(curl|wget|bash|sh|node -e|eval|exec|sudo|chmod|rm -rf)\b)/.test(trimmed) ||
+    (trimmed.includes(' ') && !trimmed.startsWith('@'))
+  );
+}
+
 export default async function pkgGuard(input, options = {}) {
-  if (options.script && typeof input === 'string') {
+  const isScript = Boolean(options.script || looksLikeShellCommand(input));
+
+  if (isScript && typeof input === 'string') {
     return evaluatePackage(
       {
         name: 'inline-script',
@@ -33,3 +47,5 @@ export { resolveManifest } from './resolver.js';
 export { THRESHOLDS, createLifecycleQuestions } from './questions.js';
 export { simulateLifecycleEvaluation } from './simulator.js';
 export { formatReport } from './utils.js';
+export { renderTUI, drawBox, getTerminalWidth } from './tui.js';
+

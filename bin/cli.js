@@ -2,11 +2,11 @@
 
 import { parseArgs } from 'node:util';
 import pkgGuard, { formatReport } from '../src/index.js';
-import { renderTUI, promptUserConfirmation } from '../src/tui.js';
+import { renderTUI, promptUserConfirmation, promptForTarget } from '../src/tui.js';
 
 const helpText = `
   Usage
-    $ pkg-guard <package-name | path | script>
+    $ pkg-guard [package-name | path | script]
 
   Options
     --script, -s       Evaluate a raw shell command string
@@ -58,7 +58,31 @@ async function main() {
     process.exit(0);
   }
 
-  const target = args.positionals[0] || './package.json';
+  let target = args.positionals[0];
+
+  if (!target && !args.values.script) {
+    if (!process.stdin.isTTY) {
+      console.error(`\x1b[31mError:\x1b[0m No package name, path, or script specified.\n${helpText}`);
+      process.exit(1);
+    }
+
+    target = await promptForTarget(helpText);
+
+    if (!target) {
+      console.log(helpText);
+      process.exit(0);
+    }
+
+    if (target === '--help') {
+      console.log(helpText);
+      process.exit(0);
+    }
+
+    if (target === '--version') {
+      console.log('0.1.0');
+      process.exit(0);
+    }
+  }
 
   try {
     const report = await pkgGuard(target, {

