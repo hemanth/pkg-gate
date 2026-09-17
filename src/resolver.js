@@ -9,7 +9,7 @@ import { resolve, join } from 'node:path';
  */
 export async function resolveManifest(input) {
   if (!input) {
-    throw new Error('No package or manifest provided to pkg-guard');
+    throw new Error('No package or manifest provided to pkg-gate');
   }
 
   // Case 1: Plain manifest object
@@ -105,7 +105,7 @@ async function fetchRegistryManifest(packageName) {
   const res = await fetch(url, {
     headers: {
       Accept: 'application/json',
-      'User-Agent': 'pkg-guard/0.1.0',
+      'User-Agent': 'pkg-gate/0.1.0',
     },
   });
 

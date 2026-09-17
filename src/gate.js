@@ -14,7 +14,7 @@ import { renderTUI } from './tui.js';
  * @param {boolean} [options.mock] - Force local offline simulation
  * @param {number} [options.blockScore] - Custom score threshold for blocking
  * @param {number} [options.warnScore] - Custom score threshold for warning
- * @returns {Promise<GuardReport>}
+ * @returns {Promise<GateReport>}
  */
 export async function evaluatePackage(manifest, options = {}) {
   const startTime = performance.now();

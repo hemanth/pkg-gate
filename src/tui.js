@@ -177,10 +177,10 @@ export function drawBox(lines, options = {}) {
 }
 
 /**
- * Renders the rich TUI presentation for a pkg-guard evaluation report.
+ * Renders the rich TUI presentation for a pkg-gate evaluation report.
  * Responsively scales cards, meters, and text to match the terminal width.
  *
- * @param {object} report - The GuardReport object
+ * @param {object} report - The GateReport object
  * @param {object} [options]
  * @param {number} [options.width] - Optional width override
  * @returns {string}

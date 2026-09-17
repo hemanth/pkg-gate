@@ -36,7 +36,7 @@ export function extractLifecycleScripts(scripts = {}) {
 }
 
 /**
- * Formats a terminal inspection string for a guard report.
+ * Formats a terminal inspection string for a gate report.
  */
 export function formatReport(report) {
   const { name, version, action, score, confidence, findings, reasons } = report;

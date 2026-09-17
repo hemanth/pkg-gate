@@ -1,5 +1,5 @@
 {
-  "name": "pkg-guard",
+  "name": "pkg-gate",
   "version": "0.1.0",
   "description": "Pre-install security gate for npm lifecycle scripts using TypeSafe System One.",
   "type": "module",
@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "pkg-guard": "./bin/cli.js"
+    "pkg-gate": "bin/cli.js"
   },
   "files": [
     "bin",
@@ -32,7 +32,7 @@
     "supply-chain",
     "postinstall",
     "lifecycle-scripts",
-    "guard"
+    "gate"
   ],
   "author": "Hemanth HM <hemanth@h3manth.com> (https://h3manth.com)",
   "license": "MIT",

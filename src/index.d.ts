@@ -1,4 +1,4 @@
-export interface GuardReport {
+export interface GateReport {
   name: string;
   version: string;
   action: 'allow' | 'warn' | 'block';
@@ -14,6 +14,8 @@ export interface GuardReport {
   structured: StructuredOutput;
   toJSON(): StructuredOutput;
 }
+
+export type GuardReport = GateReport;
 
 export interface ScriptFinding {
   hook: string;
@@ -83,7 +85,7 @@ export interface StructuredOutput {
   };
 }
 
-export interface PkgGuardOptions {
+export interface PkgGateOptions {
   apiKey?: string;
   mock?: boolean;
   script?: boolean;
@@ -91,20 +93,24 @@ export interface PkgGuardOptions {
   warnScore?: number;
 }
 
+export type PkgGuardOptions = PkgGateOptions;
+
 /**
  * Pre-install security gate for npm lifecycle scripts using TypeSafe System One.
  */
-export default function pkgGuard(
+export default function pkgGate(
   input: string | object,
-  options?: PkgGuardOptions
-): Promise<GuardReport>;
+  options?: PkgGateOptions
+): Promise<GateReport>;
 
-export function evaluatePackage(manifest: object, options?: PkgGuardOptions): Promise<GuardReport>;
+export const pkgGuard: typeof pkgGate;
+
+export function evaluatePackage(manifest: object, options?: PkgGateOptions): Promise<GateReport>;
 export function resolveManifest(input: string | object): Promise<object>;
 export const THRESHOLDS: Record<string, number>;
 export function createLifecycleQuestions(): Record<string, any>;
-export function formatReport(report: GuardReport): string;
-export function renderTUI(report: GuardReport, options?: { width?: number }): string;
+export function formatReport(report: GateReport): string;
+export function renderTUI(report: GateReport, options?: { width?: number }): string;
 export function drawBox(lines: string[], options?: { width?: number; color?: (s: string) => string }): string;
 export function getTerminalWidth(fallback?: number): number;
 
