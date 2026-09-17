@@ -36,6 +36,14 @@
   ],
   "author": "Hemanth HM <hemanth@h3manth.com> (https://h3manth.com)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hemanth/pkg-gate.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hemanth/pkg-gate/issues"
+  },
+  "homepage": "https://github.com/hemanth/pkg-gate#readme",
   "dependencies": {
     "@typesafe-ai/sdk": "^0.6.0"
   }

@@ -4,6 +4,7 @@ Pre-install security gate for npm lifecycle scripts using TypeSafe System One.
 
 ```bash
 npm install pkg-gate
+export TYPESAFE_API_KEY="ts_..." # get a key at typesafe.ai
 ```
 
 ## Quick start
@@ -21,7 +22,7 @@ if (!report.isSafe()) {
 console.log(report.inspect());
 ```
 
-`pkgGate()` evaluates a package or script against TypeSafe System One. `report.isSafe()` returns a boolean verdict. `report.inspect()` renders the TUI card.
+`pkgGate()` evaluates a package or script against TypeSafe System One. `report.isSafe()` returns a boolean verdict. `report.inspect()` renders the TUI card. Without `TYPESAFE_API_KEY`, it falls back to an offline calibrated simulator.
 
 ## Check local package
 

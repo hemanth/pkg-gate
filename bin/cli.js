@@ -9,6 +9,7 @@ const helpText = `
     $ pkg-gate [package-name | path | script]
 
   Options
+    --api-key, -k      TypeSafe API key (or set TYPESAFE_API_KEY env var)
     --script, -s       Evaluate a raw shell command string
     --json             Output strictly typed structured JSON
     --plain            Output plain text summary (no TUI boxes)
@@ -36,6 +37,7 @@ async function main() {
     plain: { type: 'boolean' },
     mock: { type: 'boolean' },
     yes: { type: 'boolean', short: 'y' },
+    'api-key': { type: 'string', short: 'k' },
     'block-score': { type: 'string' },
     'warn-score': { type: 'string' },
   };
@@ -86,6 +88,7 @@ async function main() {
 
   try {
     const report = await pkgGate(target, {
+      apiKey: args.values['api-key'] || process.env.TYPESAFE_API_KEY,
       script: args.values.script,
       mock: args.values.mock,
       blockScore: args.values['block-score'] ? parseFloat(args.values['block-score']) : undefined,
