@@ -28,7 +28,7 @@ export const THRESHOLDS = {
 export function createLifecycleQuestions() {
   return {
     script_intent: choice(
-      'What is the primary intent and runtime behavior of this npm lifecycle script?',
+      'What is the primary intent and runtime behavior of `script_content` executed in lifecycle hook `lifecycle_hook`?',
       {
         build_tool: 'Standard compilation or native build (e.g. node-gyp, esbuild, tsc, cargo)',
         binary_download: 'Downloads official pre-compiled native binaries or assets from a known repository or CDN',
@@ -40,7 +40,7 @@ export function createLifecycleQuestions() {
       }
     ),
     threat_severity: score(
-      'How severe is the security risk of running this lifecycle script during npm install?',
+      'How severe is the security risk of executing `script_content` during npm install of `package.name`?',
       [
         'Safe: standard build or benign command with no external network or secret access',
         'Low risk: fetches known binary from release domain or routine package setup',
@@ -49,14 +49,14 @@ export function createLifecycleQuestions() {
       ]
     ),
     accesses_secrets: noul(
-      'Does this script attempt to access, extract, or transmit environment variables, private credentials, or authentication tokens?',
+      'Does `script_content` attempt to access, extract, or transmit environment variables, private credentials, or authentication tokens?',
       {
         true: 'It accesses or exfiltrates environment secrets, auth tokens, or private credentials',
         false: 'It does not attempt to access credentials or environment secrets',
       }
     ),
     remote_execution: noul(
-      'Does this script download and execute arbitrary unverified external code or pipe remote scripts directly into a shell?',
+      'Does `script_content` download and execute arbitrary unverified external code or pipe remote scripts directly into a shell?',
       {
         true: 'It downloads and executes unverified remote code or uses curl/wget piping to a shell',
         false: 'It only runs local tools or verified fixed installers',
