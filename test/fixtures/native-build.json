@@ -1,0 +1,8 @@
+{
+  "name": "native-addon",
+  "version": "1.2.0",
+  "description": "Standard C++ native addon",
+  "scripts": {
+    "install": "node-gyp rebuild"
+  }
+}

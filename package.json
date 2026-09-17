@@ -1,0 +1,32 @@
+{
+  "name": "pkg-guard",
+  "version": "0.1.0",
+  "description": "Pre-install security gate for npm lifecycle scripts using TypeSafe System One.",
+  "type": "module",
+  "main": "./src/index.js",
+  "bin": {
+    "pkg-guard": "./bin/cli.js"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "demo": "node bin/cli.js test/fixtures/credential-theft.json --mock"
+  },
+  "keywords": [
+    "typesafe",
+    "system-one",
+    "security",
+    "npm",
+    "supply-chain",
+    "postinstall",
+    "lifecycle-scripts",
+    "guard"
+  ],
+  "author": "Hemanth HM <hemanth@h3manth.com> (https://h3manth.com)",
+  "license": "MIT",
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0"
+  }
+}

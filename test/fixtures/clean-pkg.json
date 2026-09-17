@@ -1,0 +1,8 @@
+{
+  "name": "clean-utility",
+  "version": "1.0.0",
+  "description": "A clean utility with zero install scripts",
+  "scripts": {
+    "test": "node test.js"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "fast-tool",
+  "version": "2.0.0",
+  "description": "Precompiled native executable downloader",
+  "scripts": {
+    "postinstall": "node ./install.js --download-binary https://github.com/fast-tool/releases"
+  }
+}
