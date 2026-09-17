@@ -22,7 +22,8 @@
   ],
   "scripts": {
     "test": "node --test test/*.test.js",
-    "demo": "node bin/cli.js test/fixtures/credential-theft.json --mock"
+    "demo": "node bin/cli.js test/fixtures/credential-theft.json --mock",
+    "playground": "npx serve docs"
   },
   "keywords": [
     "typesafe",

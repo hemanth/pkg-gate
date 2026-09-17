@@ -101,6 +101,11 @@ npx pkg-gate esbuild --plain
 
 Exit code `0` on allow, `1` on block, `2` on warn. When a warning triggers in an interactive terminal, prompts the user for confirmation.
 
+## Playground
+
+Interactive browser playground with live package evaluation, preset scenarios, and architecture flow:
+https://hemanth.github.io/pkg-gate/
+
 ## Demo
 
 ```bash

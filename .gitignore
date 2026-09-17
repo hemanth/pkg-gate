@@ -2,7 +2,8 @@ node_modules/
 .DS_Store
 .env
 *.log
-flow-diagram.html
-flow-diagram.svg
+/flow-diagram.html
+/flow-diagram.svg
+!docs/flow-diagram.svg
 video/
 
