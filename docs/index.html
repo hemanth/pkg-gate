@@ -1233,11 +1233,12 @@
           <div class="engine-toggle-row">
             <div>
               <div class="engine-label">Evaluation Engine</div>
-              <div class="engine-desc" id="engine-desc-text">Calibrated TypeSafe System One offline engine</div>
+              <div class="engine-desc" id="engine-desc-text">Fast heuristic gate (default sub-millisecond)</div>
             </div>
-            <div class="toggle-switch">
-              <button class="toggle-opt active" id="btn-engine-sim" data-engine="sim">Simulator</button>
-              <button class="toggle-opt" id="btn-engine-api" data-engine="api">Live API</button>
+            <div class="toggle-switch" style="display: flex; flex-wrap: wrap; gap: 2px;">
+              <button class="toggle-opt active" id="btn-engine-sim" data-engine="sim">Fast Heuristic Gate (Default)</button>
+              <button class="toggle-opt" id="btn-engine-webml" data-engine="webml-kit">webml-kit / OpenJev WebGPU (Local On-Device Audit)</button>
+              <button class="toggle-opt" id="btn-engine-api" data-engine="api">TypeSafe Cloud API</button>
             </div>
           </div>
 
@@ -1618,6 +1619,21 @@
       return extracted;
     }
 
+    let pkgGateWebMLEngine = null;
+    async function getPkgGateWebMLEngine() {
+      if (pkgGateWebMLEngine) return pkgGateWebMLEngine;
+      let webmlMod;
+      try {
+        webmlMod = await import('./webml-kit.browser.js');
+      } catch {
+        webmlMod = await import('https://esm.sh/webml-kit@0.4.0');
+      }
+      const createFn = webmlMod.createDecisionEngine || webmlMod.default?.decision;
+      pkgGateWebMLEngine = createFn({ model: 'minicpm5-2b', mode: 'auto' });
+      await pkgGateWebMLEngine.init();
+      return pkgGateWebMLEngine;
+    }
+
     /* ==========================================================================
        PACKAGE EVALUATOR (matches src/gate.js)
        ========================================================================== */
@@ -1649,7 +1665,89 @@
 
       for (const { hook, command } of scripts) {
         let result;
-        if (options.engine === 'api' && options.apiKey) {
+        if (options.engine === 'webml-kit') {
+          try {
+            const engine = await getPkgGateWebMLEngine();
+            const scriptState = {
+              package: {
+                name: manifest.name,
+                version: manifest.version,
+                description: manifest.description,
+              },
+              lifecycle_hook: hook,
+              script_content: command,
+            };
+
+            const [intentRes, severityRes, secretRes, remoteRes] = await Promise.all([
+              engine.choice({
+                state: scriptState,
+                question: 'What is the intent of this npm package lifecycle script?',
+                options: {
+                  standard_build: 'Compiles native addons, C++ bindings, or bundles assets',
+                  binary_download: 'Downloads official pre-built binary from release domain',
+                  credential_access: 'Harvests secrets, tokens, ssh keys, or sensitive environment variables',
+                  obfuscated_exec: 'Executes base64/hex obfuscated commands or pipes curl/wget to bash',
+                  reconnaissance: 'Inspects host network, /etc/passwd, users, or system environment'
+                }
+              }),
+              engine.score({
+                state: scriptState,
+                instructions: 'Rate the security threat level of this lifecycle script on a scale of 0 to 3',
+                criteria: ['benign', 'low', 'medium', 'critical']
+              }),
+              engine.noul({
+                state: scriptState,
+                statement: 'This script attempts to access or exfiltrate private credentials, tokens, or environment variables'
+              }),
+              engine.noul({
+                state: scriptState,
+                statement: 'This script downloads remote code or pipes curl/wget to bash or sh'
+              })
+            ]);
+
+            const rubricText = {
+              0: 'Safe: standard build or benign command with no external network or secret access',
+              1: 'Low risk: fetches known binary from release domain or routine package setup',
+              2: 'Suspicious: makes non-standard outbound connections, inspects system environment, or runs encoded commands',
+              3: 'Critical threat: credential harvesting, token exfiltration, backdoor dropper, or destructive action'
+            };
+
+            const sevScore = Number(severityRes.score.toFixed(2));
+            const rubricKey = Math.min(3, Math.max(0, Math.round(sevScore)));
+
+            result = {
+              model: `webml-kit / OpenJev WebGPU (Local On-Device Audit)`,
+              answers: {
+                script_intent: {
+                  type: 'choice',
+                  choice: intentRes.choice,
+                  probabilities: intentRes.probabilities,
+                  confidence: intentRes.confidence
+                },
+                threat_severity: {
+                  type: 'score',
+                  score: sevScore,
+                  rubricLevel: rubricText[rubricKey],
+                  confidence: severityRes.confidence
+                },
+                accesses_secrets: {
+                  type: 'noul',
+                  noul: Number(secretRes.noul.toFixed(2)),
+                  passed: secretRes.passed
+                },
+                remote_execution: {
+                  type: 'noul',
+                  noul: Number(remoteRes.noul.toFixed(2)),
+                  passed: remoteRes.passed
+                }
+              }
+            };
+          } catch (err) {
+            console.warn('webml-kit evaluation failed, falling back to simulator:', err);
+            result = simulateLifecycleEvaluation(hook, command, manifest);
+            result.model = 'Heuristic Fallback';
+          }
+        } else if (options.engine === 'api' && options.apiKey) {
           try {
             // Live TypeSafe System One cloud inference
             const resp = await fetch('https://api.typesafe.ai/v1/system-one', {
@@ -1846,7 +1944,7 @@
       document.getElementById('metric-gate-sub').textContent = report.score >= 2.0 ? 'Score >= 2.0' : 'Score < 1.2';
       
       document.getElementById('metric-latency').textContent = `${report.latencyMs}ms`;
-      document.getElementById('metric-engine-name').textContent = currentEngine === 'api' ? 'Live System One' : 'Calibrated Sim';
+      document.getElementById('metric-engine-name').textContent = currentEngine === 'api' ? 'TypeSafe Cloud API' : (currentEngine === 'webml-kit' ? 'webml-kit WebGPU' : 'Fast Heuristic');
 
       // Findings List
       const scriptsCountEl = document.getElementById('scripts-count');
@@ -2092,6 +2190,7 @@
 
       // Engine Toggles
       const btnSim = document.getElementById('btn-engine-sim');
+      const btnWebml = document.getElementById('btn-engine-webml');
       const btnApi = document.getElementById('btn-engine-api');
       const apiKeyBox = document.getElementById('api-key-box');
       const apiKeyInput = document.getElementById('api-key-input');
@@ -2103,16 +2202,30 @@
       btnSim.addEventListener('click', () => {
         currentEngine = 'sim';
         btnSim.classList.add('active');
+        if (btnWebml) btnWebml.classList.remove('active');
         btnApi.classList.remove('active');
         apiKeyBox.classList.remove('visible');
-        engineDescText.textContent = 'Calibrated TypeSafe System One offline engine';
+        engineDescText.textContent = 'Fast Heuristic Gate (Default sub-millisecond)';
         runEvaluation();
       });
+
+      if (btnWebml) {
+        btnWebml.addEventListener('click', () => {
+          currentEngine = 'webml-kit';
+          btnWebml.classList.add('active');
+          btnSim.classList.remove('active');
+          btnApi.classList.remove('active');
+          apiKeyBox.classList.remove('visible');
+          engineDescText.textContent = 'webml-kit / OpenJev WebGPU (Local On-Device Audit)';
+          runEvaluation();
+        });
+      }
 
       btnApi.addEventListener('click', () => {
         currentEngine = 'api';
         btnApi.classList.add('active');
         btnSim.classList.remove('active');
+        if (btnWebml) btnWebml.classList.remove('active');
         apiKeyBox.classList.add('visible');
         engineDescText.textContent = 'Live TypeSafe System One API (cloud)';
         runEvaluation();

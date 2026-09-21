@@ -1,6 +1,6 @@
 {
   "name": "pkg-gate",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Pre-install security gate for npm lifecycle scripts using TypeSafe System One.",
   "type": "module",
   "main": "./src/index.js",
